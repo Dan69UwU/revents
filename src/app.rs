@@ -11,8 +11,7 @@ pub enum StatoApp {
 }
 
 pub struct App {
-    // <--- 'pub' qui
-    pub data_sel: NaiveDate, // <--- 'pub' anche ai campi!
+    pub data_sel: NaiveDate, 
     pub stato: StatoApp,
     pub focus_index: usize,
     pub indice_modifica: Option<usize>,
@@ -26,7 +25,6 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        // <--- 'pub' al metodo
         Self {
             data_sel: Local::now().date_naive(),
             stato: StatoApp::Normale,
@@ -41,7 +39,6 @@ impl App {
     }
 
     pub fn reset_buffer(&mut self) {
-        // <--- 'pub' al metodo
         self.b_nome.clear();
         self.b_desc.clear();
         self.b_ora = String::from("12:00");

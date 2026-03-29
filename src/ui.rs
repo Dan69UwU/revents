@@ -26,13 +26,11 @@ const MESI: [&str; 12] = [
 pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
     let area = f.area();
 
-    // 1. Layout Verticale (Corpo e Barra Comandi)
     let main_l = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(3), Constraint::Length(3)])
         .split(area);
 
-    // 2. Layout Orizzontale (Calendario 30% e Info 70%)
     let corpo = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
@@ -40,7 +38,6 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
 
     match app.stato {
         StatoApp::Normale => {
-            // --- CALENDARIO (SINISTRA) ---
             let anno = app.data_sel.year();
             let mese = app.data_sel.month();
             let mut cal_str = format!(
@@ -50,7 +47,6 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             );
 
             if let Some(primo) = chrono::NaiveDate::from_ymd_opt(anno, mese, 1) {
-                // Spazi iniziali basati sul giorno della settimana
                 let spazi = primo.weekday().number_from_monday() - 1;
                 for _ in 0..spazi {
                     cal_str.push_str("    ");
@@ -90,7 +86,6 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 corpo[0],
             );
 
-            // --- ANTEPRIMA (DESTRA) ---
             let oggi: Vec<&Evento> = eventi
                 .iter()
                 .filter(|e| e.appare_il(app.data_sel))
@@ -120,8 +115,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             );
         }
 
-        StatoApp::Dettaglio => {
-            // --- LISTA NOMI (SINISTRA) ---
+        StatoApp::Dettaglio => {       
             let oggi: Vec<&Evento> = eventi
                 .iter()
                 .filter(|e| e.appare_il(app.data_sel))
@@ -140,7 +134,6 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 corpo[0],
             );
 
-            // --- DETTAGLI COMPLETI (DESTRA) ---
             if let Some(ev) = oggi.get(app.focus_index) {
                 let det = format!(
                     "NOME: {}\nORA: {}\nRICORRENZA: {:?}\nNOTIFICA: {}\nINIZIO: {}\n\nDESCRIZIONE:\n{}",
@@ -168,11 +161,11 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             let form = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Length(3), // Nome
-                    Constraint::Length(3), // Descrizione
-                    Constraint::Length(3), // Ora
-                    Constraint::Length(3), // Ricorrenza
-                    Constraint::Length(3), // Notifica
+                    Constraint::Length(3), 
+                    Constraint::Length(3), 
+                    Constraint::Length(3), 
+                    Constraint::Length(3), 
+                    Constraint::Length(3), 
                     Constraint::Min(0),
                 ])
                 .split(corpo[1]);
@@ -183,8 +176,6 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             } else {
                 " Nome "
             };
-
-            // Colore Rosso se vuoto e selezionato, Giallo se ha focus, Bianco altrimenti
             let stile_n = if app.focus_index == 0 {
                 if nome_vuoto {
                     Style::default().fg(Color::Red)
@@ -275,7 +266,6 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
         }
     }
 
-    // --- BARRA COMANDI (IN BASSO) ---
     let aiuti = match app.stato {
         StatoApp::Normale => "Q: Esci | N: Nuovo | INVIO: Dettagli | Frecce: Naviga",
         StatoApp::Dettaglio => "ESC: Torna | J/K: Scorri | D: Elimina | M: Modifica",

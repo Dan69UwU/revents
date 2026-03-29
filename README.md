@@ -6,7 +6,7 @@ Un'agenda minimale da terminale scritta in Rust. Include l'interfaccia principal
 
 1. **Compila il progetto:**
    ```bash
-   git clone <URL_REPO>
+   git clone https://github.com/Dan69UwU/revents
    cd revents
    cargo build --release
    ```

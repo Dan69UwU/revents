@@ -8,7 +8,7 @@ use std::time::Duration;
 pub fn invia_notifica_sistema(titolo: &str, messaggio: &str) {
     let _ = Command::new("notify-send")
         .arg("-i")
-        .arg("calendar") // Icona standard
+        .arg("calendar")
         .arg(titolo)
         .arg(messaggio)
         .spawn();
@@ -20,7 +20,6 @@ pub fn avvia_motore_notifiche(eventi_condivisi: Arc<Mutex<Vec<Evento>>>) {
 
         loop {
             let ora_attuale = Local::now().naive_local();
-            // Blocchiamo il mutex solo per il tempo necessario a leggere
             if let Ok(lista) = eventi_condivisi.lock() {
                 for ev in lista.iter() {
                     if ev.notifica_anticipo == AnticipoNotifica::Nessuna {
@@ -32,7 +31,6 @@ pub fn avvia_motore_notifiche(eventi_condivisi: Arc<Mutex<Vec<Evento>>>) {
                     let momento_notifica =
                         momento_evento - chrono::Duration::minutes(anticipo_minuti);
 
-                    // Se siamo nel range della notifica
                     if ora_attuale >= momento_notifica && ora_attuale < momento_evento {
                         let id = (ev.nome.clone(), ev.data_inizio);
                         if !notificati.contains(&id) {

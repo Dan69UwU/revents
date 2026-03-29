@@ -1,6 +1,6 @@
 # Agenda TUI
 
-Un'agenda minimale da terminale scritta in Rust. Include l'interfaccia principale (`revents`) e un daemon in background (`daemon`) per le notifiche desktop. I dati vengono salvati in un file `agenda.json` locale.
+R(emember)events è un'agenda minimale da terminale scritta in Rust. Include l'interfaccia principale (`revents`) e un daemon in background (`daemon`) per le notifiche desktop. I dati vengono salvati in un file `agenda.json` locale.
 
 ## 🚀 Installazione
 
@@ -38,3 +38,6 @@ Lancia l'interfaccia aprendo il terminale e digitando `~/Agenda/revents`.
 * **Frecce Su/Giù** (in creazione): Spostati tra i campi.
 * **Spazio** (in creazione): Cambia i valori di Ricorrenza e Notifica.
 * **q** / **Esc**: Esci.``
+## TODO
+funzione che verrano aggiunge in seguito:
+* temi personalizzabili

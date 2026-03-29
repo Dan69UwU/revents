@@ -37,9 +37,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut app = App::new();
-
-    //   notifiche::avvia_motore_notifiche(Arc::clone(&eventi_shared));
-
     let res = run_app(&mut terminal, &mut app, &eventi_shared, &path_json);
 
     disable_raw_mode()?;
@@ -94,9 +91,6 @@ where
             let mut dati_modificati = false;
 
             match app.stato {
-                // ==========================================
-                // 1. STATO NORMALE (Navigazione Calendario)
-                // ==========================================
                 StatoApp::Normale => match key.code {
                     KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                     KeyCode::Char('n') => {
@@ -135,10 +129,6 @@ where
                     }
                     _ => {}
                 },
-
-                // ==========================================
-                // 2. STATO CREAZIONE E MODIFICA (Form)
-                // ==========================================
                 StatoApp::Creazione | StatoApp::Modifica => match key.code {
                     KeyCode::Esc => {
                         app.reset_buffer();
@@ -246,10 +236,6 @@ where
                     }
                     _ => {}
                 },
-
-                // ==========================================
-                // 3. STATO DETTAGLIO (Visualizzazione)
-                // ==========================================
                 StatoApp::Dettaglio => match key.code {
                     KeyCode::Esc => app.stato = StatoApp::Normale,
                     KeyCode::Char('d') => {
@@ -279,8 +265,6 @@ where
                     _ => {}
                 },
             }
-
-            // SALVATAGGIO AUTOMATICO UNIVERSALE
             if dati_modificati {
                 if let Ok(json) = serde_json::to_string_pretty(&*lista) {
                     let _ = fs::write(path_json, json);

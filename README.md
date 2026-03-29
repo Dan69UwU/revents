@@ -24,7 +24,8 @@ Un'agenda minimale da terminale scritta in Rust. Include l'interfaccia principal
    ```bash
    ~/Agenda/daemon &
    ```
-
+  testato con make tramite il comando send-notify
+  
 ## ⌨️ Utilizzo
 
 Lancia l'interfaccia aprendo il terminale e digitando `~/Agenda/revents`.

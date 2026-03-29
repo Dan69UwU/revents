@@ -1,6 +1,6 @@
 use crate::app::{App, StatoApp};
 use crate::model::{AnticipoNotifica, Evento};
-use chrono::{Datelike, Weekday};
+use chrono::Datelike;
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout},
@@ -115,7 +115,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             );
         }
 
-        StatoApp::Dettaglio => {       
+        StatoApp::Dettaglio => {
             let oggi: Vec<&Evento> = eventi
                 .iter()
                 .filter(|e| e.appare_il(app.data_sel))
@@ -161,11 +161,11 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             let form = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
-                    Constraint::Length(3), 
-                    Constraint::Length(3), 
-                    Constraint::Length(3), 
-                    Constraint::Length(3), 
-                    Constraint::Length(3), 
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Length(3),
+                    Constraint::Length(3),
                     Constraint::Min(0),
                 ])
                 .split(corpo[1]);
@@ -268,7 +268,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
 
     let aiuti = match app.stato {
         StatoApp::Normale => "Q: Esci | N: Nuovo | INVIO: Dettagli | Frecce: Naviga",
-        StatoApp::Dettaglio => "ESC: Torna | J/K: Scorri | D: Elimina | M: Modifica",
+        StatoApp::Dettaglio => "ESC: Torna | /: Scorri | D: Elimina | M: Modifica",
         StatoApp::Creazione | StatoApp::Modifica => {
             "TAB: Campo | SPAZIO: Cambia | INVIO: Salva | ESC: Annulla"
         }

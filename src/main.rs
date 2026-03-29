@@ -1,6 +1,5 @@
 use revents::app::{App, StatoApp};
 use revents::model::{AnticipoNotifica, Evento, Frequenza};
-use revents::notifiche;
 use revents::ui;
 
 use chrono::{Duration, NaiveTime};
@@ -260,6 +259,28 @@ where
                             app.indice_modifica = Some(idx);
                             app.focus_index = 0;
                             app.stato = StatoApp::Modifica;
+                        }
+                    }
+                    KeyCode::Down => {
+                        let eventi_giorno = lista
+                            .iter()
+                            .filter(|e| e.data_inizio == app.data_sel)
+                            .count();
+                        if eventi_giorno > 0 {
+                            app.focus_index = (app.focus_index + 1) % eventi_giorno;
+                        }
+                    }
+                    KeyCode::Up => {
+                        let eventi_giorno = lista
+                            .iter()
+                            .filter(|e| e.data_inizio == app.data_sel)
+                            .count();
+                        if eventi_giorno > 0 {
+                            if app.focus_index == 0 {
+                                app.focus_index = eventi_giorno - 1;
+                            } else {
+                                app.focus_index -= 1;
+                            }
                         }
                     }
                     _ => {}

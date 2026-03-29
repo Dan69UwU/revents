@@ -1,4 +1,4 @@
-use crate::model::{AnticipoNotifica, Evento, Frequenza};
+use crate::model::{AnticipoNotifica, Frequenza};
 use chrono::{Local, NaiveDate};
 
 #[derive(PartialEq)]
@@ -11,7 +11,7 @@ pub enum StatoApp {
 }
 
 pub struct App {
-    pub data_sel: NaiveDate, 
+    pub data_sel: NaiveDate,
     pub stato: StatoApp,
     pub focus_index: usize,
     pub indice_modifica: Option<usize>,

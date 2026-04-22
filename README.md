@@ -24,7 +24,7 @@ R(emember)events è un'agenda minimale da terminale scritta in Rust. Include l'i
    ```bash
    ~/Agenda/daemon &
    ```
-  testato con make tramite il comando send-notify e nerd fonts
+  testato con mako tramite il comando send-notify e nerd fonts
   
 ## ⌨️ Utilizzo
 

@@ -126,6 +126,10 @@ where
                             app.stato = StatoApp::Dettaglio;
                         }
                     }
+                    KeyCode::F(5) => {
+                        app.tema = revents::config::TemaApp::carica("config.toml");
+                    }
+
                     _ => {}
                 },
                 StatoApp::Creazione | StatoApp::Modifica => match key.code {

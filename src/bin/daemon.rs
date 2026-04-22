@@ -3,7 +3,7 @@ use revents::model::{AnticipoNotifica, Evento};
 use std::env;
 use std::fs;
 use std::thread;
-use std::time::Duration; // Modelli dal tuo progetto
+use std::time::Duration;
 
 fn main() {
     let mut percorso_base = env::current_exe().expect("Impossibile ottenere il percorso");
@@ -11,7 +11,6 @@ fn main() {
     let mut percorso_json = percorso_base.clone();
     percorso_json.push("agenda.json");
 
-    // Questa lista ricorda quali notifiche sono già state inviate per non ripeterle
     let mut notificati: Vec<(String, chrono::NaiveDate)> = Vec::new();
 
     loop {
@@ -20,7 +19,6 @@ fn main() {
                 let ora_attuale = Local::now().naive_local();
 
                 for ev in eventi {
-                    // Salta gli eventi senza notifica
                     if ev.notifica_anticipo == AnticipoNotifica::Nessuna {
                         continue;
                     }
@@ -29,11 +27,9 @@ fn main() {
                     let anticipo = chrono::Duration::minutes(ev.notifica_anticipo.minuti());
                     let momento_notifica = momento_evento - anticipo;
 
-                    // Controlla se è il momento esatto per inviare la notifica
                     if ora_attuale >= momento_notifica && ora_attuale < momento_evento {
                         let id = (ev.nome.clone(), ev.data_inizio);
 
-                        // Se non l'abbiamo ancora notificata...
                         if !notificati.contains(&id) {
                             println!(
                                 "[{}] Notifica per: {}",
@@ -56,7 +52,6 @@ fn main() {
                                 ))
                                 .spawn();
 
-                            // Aggiungiamo l'evento alla lista per non inviarlo due volte
                             notificati.push(id);
                         }
                     }

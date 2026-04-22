@@ -1,9 +1,9 @@
+use crate::config::TemaApp;
 use crate::model::{AnticipoNotifica, Frequenza};
 use chrono::{Local, NaiveDate};
 
 #[derive(PartialEq)]
 pub enum StatoApp {
-    // <--- 'pub' qui
     Normale,
     Creazione,
     Dettaglio,
@@ -13,6 +13,7 @@ pub enum StatoApp {
 pub struct App {
     pub data_sel: NaiveDate,
     pub stato: StatoApp,
+    pub tema: TemaApp,
     pub focus_index: usize,
     pub indice_modifica: Option<usize>,
 
@@ -28,6 +29,7 @@ impl App {
         Self {
             data_sel: Local::now().date_naive(),
             stato: StatoApp::Normale,
+            tema: TemaApp::carica("config.toml"),
             focus_index: 0,
             indice_modifica: None,
             b_nome: String::new(),

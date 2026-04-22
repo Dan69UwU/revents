@@ -1,10 +1,12 @@
 use crate::app::{App, StatoApp};
 use crate::model::{AnticipoNotifica, Evento};
 use chrono::Datelike;
+use ratatui::style::Stylize;
+use ratatui::text::{Line, Span};
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Style},
+    style::Style,
     widgets::{Block, Borders, Paragraph, Wrap},
 };
 
@@ -40,34 +42,54 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
         StatoApp::Normale => {
             let anno = app.data_sel.year();
             let mese = app.data_sel.month();
-            let mut cal_str = format!(
-                "      {} {}\n\n Lu  Ma  Me  Gi  Ve  Sa  Do\n",
-                MESI[(mese - 1) as usize],
-                anno
-            );
+
+            let mut linee_calendario: Vec<Line> = Vec::new();
+
+            let titolo_mese = format!("      {} {}", MESI[(mese - 1) as usize], anno);
+            linee_calendario.push(Line::from(Span::styled(
+                titolo_mese,
+                Style::default().fg(app.tema.testo),
+            )));
+            linee_calendario.push(Line::raw(""));
+            linee_calendario.push(Line::from(Span::styled(
+                " Lu  Ma  Me  Gi  Ve  Sa  Do",
+                Style::default().fg(app.tema.testo),
+            )));
 
             if let Some(primo) = chrono::NaiveDate::from_ymd_opt(anno, mese, 1) {
+                let mut riga_corrente: Vec<Span> = Vec::new();
+
                 let spazi = primo.weekday().number_from_monday() - 1;
                 for _ in 0..spazi {
-                    cal_str.push_str("    ");
+                    riga_corrente.push(Span::raw("    "));
                 }
 
                 let mut g = primo;
                 while g.month() == mese {
                     let ha_eventi = eventi.iter().any(|e| e.appare_il(g));
 
-                    let style_char = if g == app.data_sel {
-                        format!("[{:2}]", g.day())
+                    let (testo_giorno, stile) = if g == app.data_sel {
+                        (
+                            format!("[{:2}]", g.day()),
+                            Style::default().fg(app.tema.bordo_attivo),
+                        )
                     } else if ha_eventi {
-                        format!("*{:2} ", g.day())
+                        (
+                            format!("*{:2} ", g.day()),
+                            Style::default().fg(app.tema.errore),
+                        )
                     } else {
-                        format!(" {:2} ", g.day())
+                        (
+                            format!(" {:2} ", g.day()),
+                            Style::default().fg(app.tema.testo),
+                        )
                     };
 
-                    cal_str.push_str(&style_char);
+                    riga_corrente.push(Span::styled(testo_giorno, stile));
 
                     if g.weekday().number_from_monday() == 7 {
-                        cal_str.push('\n');
+                        linee_calendario.push(Line::from(riga_corrente.clone()));
+                        riga_corrente.clear();
                     }
 
                     if let Some(next_g) = g.succ_opt() {
@@ -79,10 +101,19 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                         break;
                     }
                 }
+
+                if !riga_corrente.is_empty() {
+                    linee_calendario.push(Line::from(riga_corrente));
+                }
             }
+
             f.render_widget(
-                Paragraph::new(cal_str)
-                    .block(Block::default().title(" Calendario ").borders(Borders::ALL)),
+                Paragraph::new(linee_calendario).block(
+                    Block::default()
+                        .title(" Calendario ")
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(app.tema.bordo_normale)),
+                ),
                 corpo[0],
             );
 
@@ -109,8 +140,12 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 }
             }
             f.render_widget(
-                Paragraph::new(txt)
-                    .block(Block::default().title(" Anteprima ").borders(Borders::ALL)),
+                Paragraph::new(txt).fg(app.tema.testo).block(
+                    Block::default()
+                        .title(" Anteprima ")
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(app.tema.bordo_normale)),
+                ),
                 corpo[1],
             );
         }
@@ -120,16 +155,26 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 .iter()
                 .filter(|e| e.appare_il(app.data_sel))
                 .collect();
-            let mut lista = String::new();
+            let mut linee: Vec<Line> = Vec::new();
             for (i, ev) in oggi.iter().enumerate() {
-                let sel = if i == app.focus_index { ">> " } else { "   " };
-                lista.push_str(&format!("{}{}\n", sel, ev.nome));
+                if i == app.focus_index {
+                    linee.push(Line::from(vec![
+                        Span::styled(">> ", Style::default().fg(app.tema.bordo_attivo)),
+                        Span::styled(ev.nome.clone(), Style::default().fg(app.tema.bordo_attivo)),
+                    ]));
+                } else {
+                    linee.push(Line::from(vec![
+                        Span::raw("   "),
+                        Span::styled(ev.nome.clone(), Style::default().fg(app.tema.testo)),
+                    ]));
+                }
             }
             f.render_widget(
-                Paragraph::new(lista).block(
+                Paragraph::new(linee).block(
                     Block::default()
                         .title(" Seleziona Evento ")
-                        .borders(Borders::ALL),
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(app.tema.bordo_normale)),
                 ),
                 corpo[0],
             );
@@ -146,10 +191,12 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 );
                 f.render_widget(
                     Paragraph::new(det)
+                        .fg(app.tema.testo)
                         .block(
                             Block::default()
                                 .title(" Scheda Evento ")
-                                .borders(Borders::ALL),
+                                .borders(Borders::ALL)
+                                .border_style(Style::default().fg(app.tema.bordo_normale)),
                         )
                         .wrap(Wrap { trim: true }),
                     corpo[1],
@@ -177,43 +224,45 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 " Nome "
             };
             let stile_n = if app.focus_index == 0 {
-                if nome_vuoto {
-                    Style::default().fg(Color::Red)
-                } else {
-                    Style::default().fg(Color::Yellow)
-                }
+                Style::default().fg(app.tema.bordo_attivo)
+            } else if nome_vuoto {
+                Style::default().fg(app.tema.errore)
             } else {
-                Style::default()
+                Style::default().fg(app.tema.bordo_normale)
             };
 
             let s = |i| {
                 if app.focus_index == i {
-                    Style::default().fg(Color::Yellow)
+                    Style::default().fg(app.tema.bordo_attivo)
                 } else {
-                    Style::default()
+                    Style::default().fg(app.tema.bordo_normale)
                 }
             };
 
             f.render_widget(
-                Paragraph::new(app.b_nome.as_str()).block(
-                    Block::default()
-                        .title(titolo_n)
-                        .borders(Borders::ALL)
-                        .border_style(stile_n),
-                ),
+                Paragraph::new(app.b_nome.as_str())
+                    .fg(app.tema.testo)
+                    .block(
+                        Block::default()
+                            .title(titolo_n)
+                            .borders(Borders::ALL)
+                            .border_style(stile_n),
+                    ),
                 form[0],
             );
             f.render_widget(
-                Paragraph::new(app.b_desc.as_str()).block(
-                    Block::default()
-                        .title(" Descrizione ")
-                        .borders(Borders::ALL)
-                        .border_style(s(1)),
-                ),
+                Paragraph::new(app.b_desc.as_str())
+                    .fg(app.tema.testo)
+                    .block(
+                        Block::default()
+                            .title(" Descrizione ")
+                            .borders(Borders::ALL)
+                            .border_style(s(1)),
+                    ),
                 form[1],
             );
             f.render_widget(
-                Paragraph::new(app.b_ora.as_str()).block(
+                Paragraph::new(app.b_ora.as_str()).fg(app.tema.testo).block(
                     Block::default()
                         .title(" Ora (HH:MM) ")
                         .borders(Borders::ALL)
@@ -222,31 +271,35 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 form[2],
             );
             f.render_widget(
-                Paragraph::new(format!("{:?} (SPAZIO)", app.b_freq)).block(
-                    Block::default()
-                        .title(" Ricorrenza ")
-                        .borders(Borders::ALL)
-                        .border_style(s(3)),
-                ),
+                Paragraph::new(format!("{:?} (SPAZIO)", app.b_freq))
+                    .fg(app.tema.testo)
+                    .block(
+                        Block::default()
+                            .title(" Ricorrenza ")
+                            .borders(Borders::ALL)
+                            .border_style(s(3)),
+                    ),
                 form[3],
             );
             f.render_widget(
-                Paragraph::new(format!("{} (SPAZIO)", app.b_notifica.as_str())).block(
-                    Block::default()
-                        .title(" Notifica Anticipata ")
-                        .borders(Borders::ALL)
-                        .border_style(s(4)),
-                ),
+                Paragraph::new(format!("{} (SPAZIO)", app.b_notifica.as_str()))
+                    .fg(app.tema.testo)
+                    .block(
+                        Block::default()
+                            .title(" Notifica Anticipata ")
+                            .borders(Borders::ALL)
+                            .border_style(s(4)),
+                    ),
                 form[4],
             );
 
             f.render_widget(
                 Paragraph::new("Stai editando un evento")
+                    .fg(app.tema.testo)
                     .block(Block::default().title(" Editor ").borders(Borders::ALL)),
                 corpo[0],
             );
 
-            // --- GESTIONE CURSORE ---
             let area_attiva = form[app.focus_index];
             match app.focus_index {
                 0 => f.set_cursor_position((
@@ -267,14 +320,21 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
     }
 
     let aiuti = match app.stato {
-        StatoApp::Normale => "Q: Esci | N: Nuovo | INVIO: Dettagli | Frecce: Naviga",
+        StatoApp::Normale => {
+            "Q: Esci | N: Nuovo | INVIO: Dettagli | Frecce: Naviga | F5: Ricarica tema"
+        }
         StatoApp::Dettaglio => "ESC: Torna | /: Scorri | D: Elimina | M: Modifica",
         StatoApp::Creazione | StatoApp::Modifica => {
             "TAB: Campo | SPAZIO: Cambia | INVIO: Salva | ESC: Annulla"
         }
     };
     f.render_widget(
-        Paragraph::new(aiuti).block(Block::default().title(" Comandi ").borders(Borders::ALL)),
+        Paragraph::new(aiuti).fg(app.tema.testo).block(
+            Block::default()
+                .title(" Comandi ")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(app.tema.bordo_normale)),
+        ),
         main_l[1],
     );
 }

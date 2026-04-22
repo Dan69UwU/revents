@@ -1,0 +1,21 @@
+[tema]
+# --- GUIDA AI COLORI ---
+# Puoi usare i nomi standard di Ratatui:
+# Black, Red, Green, Yellow, Blue, Magenta, Cyan, Gray, DarkGray, 
+# LightRed, LightGreen, LightYellow, LightBlue, LightMagenta, LightCyan, White.
+# Oppure puoi usare i codici esadecimali (es. "#ff5555")
+
+# Colore per i messaggi di errore e i campi obbligatori vuoti
+errore = "Magenta"
+
+# Colore per gli elementi evidenziati o selezionati
+evidenziato = "Green"
+
+# Colore dei bordi quando il riquadro non è attivo
+bordo_normale = "Green"
+
+# Colore dei bordi quando il riquadro ha il focus (es. durante l'editing)
+bordo_attivo = "Red"
+
+#Colore del testo 
+testo="Magenta"

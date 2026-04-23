@@ -6,16 +6,13 @@
 # Oppure puoi usare i codici esadecimali (es. "#ff5555")
 
 # Colore per i messaggi di errore e i campi obbligatori vuoti
-errore = "Magenta"
-
-# Colore per gli elementi evidenziati o selezionati
-evidenziato = "Green"
+errore = "Red"
 
 # Colore dei bordi quando il riquadro non è attivo
-bordo_normale = "Green"
+bordo_normale = "Darkgray"
 
 # Colore dei bordi quando il riquadro ha il focus (es. durante l'editing)
-bordo_attivo = "Red"
-
+bordo_attivo = "Yellow"
+  
 #Colore del testo 
-testo="Magenta"
+testo="White"

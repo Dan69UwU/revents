@@ -138,11 +138,11 @@ where
                         app.stato = StatoApp::Normale;
                     }
                     KeyCode::Down | KeyCode::Tab => {
-                        app.focus_index = (app.focus_index + 1) % 5;
+                        app.focus_index = (app.focus_index + 1) % 6;
                     }
                     KeyCode::Up => {
                         if app.focus_index == 0 {
-                            app.focus_index = 4;
+                            app.focus_index = 5;
                         } else {
                             app.focus_index -= 1;
                         }
@@ -165,6 +165,8 @@ where
                                 AnticipoNotifica::UnOra => AnticipoNotifica::UnGiorno,
                                 AnticipoNotifica::UnGiorno => AnticipoNotifica::Nessuna,
                             };
+                        } else if app.focus_index == 5 {
+                            app.b_suono = !app.b_suono;
                         }
                     }
                     KeyCode::Char(c) => {
@@ -185,6 +187,8 @@ where
                                 AnticipoNotifica::UnOra => AnticipoNotifica::UnGiorno,
                                 AnticipoNotifica::UnGiorno => AnticipoNotifica::Nessuna,
                             };
+                        } else if c == ' ' && app.focus_index == 5 {
+                            app.b_suono = !app.b_suono;
                         } else {
                             match app.focus_index {
                                 0 => app.b_nome.push(c),
@@ -222,6 +226,7 @@ where
                                 ora_inizio: ora_parsata,
                                 ricorrenza: app.b_freq.clone(),
                                 notifica_anticipo: app.b_notifica.clone(),
+                                riproduci_suono: app.b_suono,
                             };
 
                             if app.stato == StatoApp::Creazione {
@@ -259,6 +264,7 @@ where
                             app.b_ora = ev.ora_inizio.format("%H:%M").to_string();
                             app.b_freq = ev.ricorrenza.clone();
                             app.b_notifica = ev.notifica_anticipo.clone();
+                            app.b_suono = ev.riproduci_suono;
 
                             app.indice_modifica = Some(idx);
                             app.focus_index = 0;

@@ -75,6 +75,8 @@ pub struct Evento {
     pub ora_inizio: NaiveTime,
     pub ricorrenza: Frequenza,
     pub notifica_anticipo: AnticipoNotifica,
+    #[serde(default)]
+    pub riproduci_suono: bool,
 }
 
 impl Evento {

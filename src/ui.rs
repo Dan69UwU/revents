@@ -213,6 +213,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                     Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Length(3),
+                    Constraint::Length(3),
                     Constraint::Min(0),
                 ])
                 .split(corpo[1]);
@@ -292,7 +293,21 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                     ),
                 form[4],
             );
+            let testo_suono = if app.b_suono {
+                "[X] Attivo (SPAZIO)"
+            } else {
+                "[ ] Disattivato (SPAZIO)"
+            };
 
+            f.render_widget(
+                Paragraph::new(testo_suono).fg(app.tema.testo).block(
+                    Block::default()
+                        .title(" Suono Notifica ")
+                        .borders(Borders::ALL)
+                        .border_style(s(5)), // Assegna il focus all'indice 5
+                ),
+                form[5],
+            );
             f.render_widget(
                 Paragraph::new("Stai editando un evento")
                     .fg(app.tema.testo)

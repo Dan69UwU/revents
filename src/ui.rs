@@ -338,7 +338,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
         StatoApp::Normale => {
             "Q: Esci | N: Nuovo | INVIO: Dettagli | Frecce: Naviga | F5: Ricarica tema"
         }
-        StatoApp::Dettaglio => "ESC: Torna | /: Scorri | D: Elimina | M: Modifica",
+        StatoApp::Dettaglio => "ESC: Torna | N: Nuovo | /: Scorri | D: Elimina | M: Modifica",
         StatoApp::Creazione | StatoApp::Modifica => {
             "TAB: Campo | SPAZIO: Cambia | INVIO: Salva | ESC: Annulla"
         }

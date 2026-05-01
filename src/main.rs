@@ -255,6 +255,10 @@ where
                             app.stato = StatoApp::Normale;
                         }
                     }
+                    KeyCode::Char('n') => {
+                        app.reset_buffer();
+                        app.stato = StatoApp::Creazione;
+                    }
                     KeyCode::Char('m') => {
                         if let Some(idx) = trova_indice_reale(&lista, app.data_sel, app.focus_index)
                         {

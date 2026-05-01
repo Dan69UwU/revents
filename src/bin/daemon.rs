@@ -2,6 +2,7 @@ use chrono::{Datelike, Local};
 use notify_rust::{Notification, Timeout, Urgency};
 use revents::model::{AnticipoNotifica, Evento, Frequenza};
 use rodio::{Decoder, OutputStream, Sink};
+use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::fs::File;
@@ -9,6 +10,37 @@ use std::io::BufReader;
 use std::path::PathBuf;
 use std::thread;
 use std::time::Duration;
+
+fn ottieni_percorso_audio() -> Option<PathBuf> {
+    let mut percorso_base = env::current_exe().ok()?;
+    percorso_base.pop();
+
+    #[derive(Deserialize)]
+    struct ConfigAudio {
+        percorso_audio: Option<String>,
+    }
+
+    let mut percorso_config = percorso_base.clone();
+    percorso_config.push("config.toml");
+
+    if let Ok(contenuto) = fs::read_to_string(percorso_config) {
+        if let Ok(config) = toml::from_str::<ConfigAudio>(&contenuto) {
+            if let Some(p) = config.percorso_audio.filter(|s| !s.trim().is_empty()) {
+                let percorso_custom = PathBuf::from(p);
+                if percorso_custom.exists() {
+                    return Some(percorso_custom);
+                }
+            }
+        }
+    }
+
+    percorso_base.push("sound.wav");
+    if percorso_base.exists() {
+        Some(percorso_base)
+    } else {
+        None
+    }
+}
 
 fn riproduci_suono(percorso: &PathBuf) {
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
@@ -47,6 +79,7 @@ fn main() {
     };
 
     loop {
+        let percorso_audio_custom = ottieni_percorso_audio();
         if let Ok(contenuto) = fs::read_to_string(&percorso_json) {
             if let Ok(eventi) = serde_json::from_str::<Vec<Evento>>(&contenuto) {
                 let ora_attuale = Local::now().naive_local();
@@ -97,14 +130,20 @@ fn main() {
                                     .icon("appointment-soon")
                                     .urgency(Urgency::Normal)
                                     .timeout(Timeout::Never);
-
+                                if ev.riproduci_suono && percorso_audio_custom.is_none() {
+                                    notifica.sound_name("message-new-instant");
+                                }
                                 let _ = notifica.show();
 
                                 if ev.riproduci_suono {
-                                    let p = percorso_audio.clone();
-                                    thread::spawn(move || {
-                                        riproduci_suono(&p);
-                                    });
+                                    if let Some(percorso) = &percorso_audio_custom {
+                                        if percorso.exists() {
+                                            let p = percorso.clone();
+                                            thread::spawn(move || {
+                                                riproduci_suono(&p);
+                                            });
+                                        }
+                                    }
                                 }
 
                                 notificati.push(id_anticipo);
@@ -128,13 +167,21 @@ fn main() {
                                 .urgency(Urgency::Normal)
                                 .timeout(Timeout::Never);
 
+                            if ev.riproduci_suono && percorso_audio_custom.is_none() {
+                                notifica.sound_name("message-new-instant");
+                            }
+
                             let _ = notifica.show();
 
                             if ev.riproduci_suono {
-                                let p = percorso_audio.clone();
-                                thread::spawn(move || {
-                                    riproduci_suono(&p);
-                                });
+                                if let Some(percorso) = &percorso_audio_custom {
+                                    if percorso.exists() {
+                                        let p = percorso.clone();
+                                        thread::spawn(move || {
+                                            riproduci_suono(&p);
+                                        });
+                                    }
+                                }
                             }
 
                             notificati.push(id_esatta);

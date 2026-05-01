@@ -17,6 +17,7 @@ R(emember)events è un'agenda minimale da terminale scritta in Rust. Include l'i
    mkdir -p ~/Agenda
    cp target/release/revents ~/Agenda/
    cp target/release/daemon ~/Agenda/
+   cp sound.wav ~/Agenda/
    ```
 
 3. **Attiva le notifiche:**

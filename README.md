@@ -26,38 +26,63 @@ R(emember)events è un'agenda minimale da terminale scritta in Rust. Include l'i
    ```
    *Testato con mako tramite il comando send-notify e nerd fonts.*
 
-## 🎨 Personalizzazione Colori
+## 🎨 Personalizzazione: Colori e Suoni
 
-L'interfaccia supporta temi personalizzati. Puoi modificare i colori creando un file chiamato `config.toml` nella stessa cartella dei tuoi eseguibili (es. `~/Agenda/config.toml`).
+L'applicazione supporta un tema personalizzato e suoni di notifica custom. Puoi configurarli creando un file chiamato `config.toml` nella stessa cartella dei tuoi eseguibili (es. `~/Agenda/config.toml`).
 
-Aggiungi questa struttura al file per definire la tua palette:
-
+Aggiungi questa struttura al file per definire l'audio e la tua palette di colori:
 ```toml
+# --- IMPOSTAZIONI GENERALI ---
+# Percorso del file audio personalizzato per le notifiche.
+# Puoi usare un percorso relativo all'eseguibile ("notifica.wav") o assoluto ("/home/utente/Musica/beep.wav").
+percorso_audio = "sound.wav"
+
 [tema]
-testo = "White"
-bordo_normale = "DarkGray"
-bordo_attivo = "Yellow"
+# --- GUIDA AI COLORI ---
+# Puoi usare i nomi standard (Black, Red, Green, Yellow, Blue, Magenta, Cyan, Gray, DarkGray, ecc.)
+# Oppure puoi usare i codici esadecimali (es. "#ff5555")
+
+# Colore per i messaggi di errore e i campi obbligatori vuoti
 errore = "Red"
+
+# Colore dei bordi quando il riquadro non è attivo
+bordo_normale = "DarkGray"
+
+# Colore dei bordi quando il riquadro ha il focus (es. durante l'editing)
+bordo_attivo = "Yellow"
+  
+# Colore del testo 
+testo = "White"
 ```
 
-**Colori supportati:** Puoi utilizzare i nomi standard supportati dal terminale (es. `Black`, `Red`, `Green`, `Yellow`, `Blue`, `Magenta`, `Cyan`, `Gray`, `DarkGray`, `LightRed`, `LightGreen`, `LightYellow`, `LightBlue`, `LightMagenta`, `LightCyan`, `White`).
-
-💡 **Suggerimento rapido:** Puoi modificare e salvare il file `config.toml` mentre l'applicazione è aperta e premere il tasto **F5** per ricaricare istantaneamente il tema senza dover riavviare il programma!
+* **File audio di default:** Se non usi il `config.toml`, il daemon cercherà automaticamente un file chiamato `sound.wav` nella cartella in cui si trova l'eseguibile.
+* 💡 **Suggerimento rapido:** Premi **F5** mentre usi `revents` per ricaricare istantaneamente i colori senza dover riavviare il programma!
 
 ## ⌨️ Utilizzo
 
 Lancia l'interfaccia aprendo il terminale e digitando `~/Agenda/revents`.
 
-**Comandi principali:**
-* **Frecce**: Naviga tra giorni e settimane.
-* **n**: Nuovo evento.
-* **Invio**: Apri i dettagli di un evento / Salva le modifiche.
-* **e** / **d** (nella schermata dettagli): Modifica / Elimina evento.
-* **Frecce Su/Giù** (in creazione): Spostati tra i campi.
-* **Spazio** (in creazione): Cambia i valori di Ricorrenza e Notifica.
+**Vista Calendario (Normale):**
+* **Frecce / Tab**: Naviga tra giorni e settimane.
+* **n**: Crea un nuovo evento nella data selezionata.
+* **Invio**: Apri i dettagli degli eventi di quella giornata.
 * **F5**: Ricarica il tema dal file di configurazione.
-* **q** / **Esc**: Esci.
+* **q** / **Esc**: Esci dall'applicazione.
 
-## 📝 TODO
+**Pannello Creazione/Modifica:**
+* **Frecce Su/Giù** / **Tab**: Spostati tra i campi (Nome, Descrizione, Ora, ecc.).
+* **Frecce Destra/Sinistra** / **Spazio**: Cambia i valori ciclici (Ricorrenza, Anticipo Notifica, Suono).
+* **Invio**: Salva l'evento.
+* **Esc**: Annulla e torna al calendario.
+
+**Pannello Dettagli Evento:**
+* **Frecce Su/Giù**: Scorri la lista degli eventi in quel giorno.
+* **n**: Crea rapidamente un nuovo evento per quel giorno.
+* **m**: Modifica l'evento selezionato.
+* **d**: Elimina l'evento selezionato.
+* **Esc**: Torna al calendario.
+
+## 📝 TODO (Roadmap)
 Funzioni che verranno aggiunte in seguito:
-* Tasti configurabili
+* [ ] Tasti completamente configurabili dall'utente.
+* [ ] Supporto all'esportazione/importazione in formato iCal (`.ics`).

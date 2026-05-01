@@ -137,6 +137,12 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                         ev.nome,
                         icon
                     ));
+                    if let Some(desc) = &ev.descrizione {
+                        if !desc.trim().is_empty() {
+                            let prima_riga = desc.lines().next().unwrap_or("");
+                            txt.push_str(&format!("    ↳ {}\n", prima_riga));
+                        }
+                    }
                 }
             }
             f.render_widget(

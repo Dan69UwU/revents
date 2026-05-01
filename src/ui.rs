@@ -35,7 +35,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
 
     let corpo = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+        .constraints([Constraint::Length(32), Constraint::Min(0)])
         .split(main_l[0]);
 
     match app.stato {
@@ -332,6 +332,48 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 _ => {}
             }
         }
+        StatoApp::Conferma => {
+            let oggi: Vec<&Evento> = eventi
+                .iter()
+                .filter(|e| e.appare_il(app.data_sel))
+                .collect();
+            let mut linee: Vec<Line> = Vec::new();
+            for (i, ev) in oggi.iter().enumerate() {
+                let stile = if i == app.focus_index {
+                    Style::default().fg(app.tema.bordo_attivo)
+                } else {
+                    Style::default().fg(app.tema.testo)
+                };
+                let prefisso = if i == app.focus_index { ">> " } else { "   " };
+                linee.push(Line::from(vec![
+                    Span::styled(prefisso, stile),
+                    Span::styled(ev.nome.clone(), stile),
+                ]));
+            }
+            f.render_widget(
+                Paragraph::new(linee).block(
+                    Block::default()
+                        .title(" Seleziona Evento ")
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(app.tema.bordo_normale)),
+                ),
+                corpo[0],
+            );
+
+            let avviso = "\n\n  Sei sicuro di voler eliminare questo evento?\n\n  Premi 'S' o INVIO per confermare\n  Premi 'N' o ESC per annullare";
+            f.render_widget(
+                Paragraph::new(avviso)
+                    .alignment(ratatui::layout::Alignment::Center)
+                    .style(Style::default().fg(app.tema.testo))
+                    .block(
+                        Block::default()
+                            .title(" ATTENZIONE ")
+                            .borders(Borders::ALL)
+                            .border_style(Style::default().fg(app.tema.bordo_normale)),
+                    ),
+                corpo[1],
+            );
+        }
     }
 
     let aiuti = match app.stato {
@@ -342,6 +384,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
         StatoApp::Creazione | StatoApp::Modifica => {
             "TAB: Campo | SPAZIO: Cambia | INVIO: Salva | ESC: Annulla"
         }
+        StatoApp::Conferma => "S/Y/INVIO: Conferma | N/ESC: Annulla",
     };
     f.render_widget(
         Paragraph::new(aiuti).fg(app.tema.testo).block(

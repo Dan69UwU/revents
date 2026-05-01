@@ -246,15 +246,7 @@ where
                 },
                 StatoApp::Dettaglio => match key.code {
                     KeyCode::Esc => app.stato = StatoApp::Normale,
-                    KeyCode::Char('d') => {
-                        if let Some(idx) = trova_indice_reale(&lista, app.data_sel, app.focus_index)
-                        {
-                            lista.remove(idx);
-                            dati_modificati = true;
-                            app.focus_index = 0;
-                            app.stato = StatoApp::Normale;
-                        }
-                    }
+                    KeyCode::Char('d') => app.stato = StatoApp::Conferma,
                     KeyCode::Char('n') => {
                         app.reset_buffer();
                         app.stato = StatoApp::Creazione;
@@ -296,6 +288,21 @@ where
                                 app.focus_index -= 1;
                             }
                         }
+                    }
+                    _ => {}
+                },
+                StatoApp::Conferma => match key.code {
+                    KeyCode::Char('s') | KeyCode::Char('y') | KeyCode::Enter => {
+                        if let Some(idx) = trova_indice_reale(&lista, app.data_sel, app.focus_index)
+                        {
+                            lista.remove(idx);
+                            dati_modificati = true;
+                            app.focus_index = 0;
+                            app.stato = StatoApp::Normale;
+                        }
+                    }
+                    KeyCode::Char('n') | KeyCode::Esc => {
+                        app.stato = StatoApp::Dettaglio;
                     }
                     _ => {}
                 },

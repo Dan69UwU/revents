@@ -8,6 +8,7 @@ pub enum StatoApp {
     Creazione,
     Dettaglio,
     Modifica,
+    Conferma,
 }
 
 pub struct App {
@@ -22,7 +23,7 @@ pub struct App {
     pub b_ora: String,
     pub b_freq: Frequenza,
     pub b_notifica: AnticipoNotifica,
-    pub b_suono:bool,
+    pub b_suono: bool,
 }
 
 impl App {
@@ -38,7 +39,7 @@ impl App {
             b_ora: String::from("12:00"),
             b_freq: Frequenza::Mai,
             b_notifica: AnticipoNotifica::Nessuna,
-            b_suono:false,
+            b_suono: false,
         }
     }
 
@@ -49,7 +50,6 @@ impl App {
         self.b_freq = Frequenza::Mai;
         self.b_notifica = AnticipoNotifica::Nessuna;
         self.focus_index = 0;
-        self.b_suono=false;
-
+        self.b_suono = false;
     }
 }

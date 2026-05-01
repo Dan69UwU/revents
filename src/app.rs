@@ -28,10 +28,14 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
+        let mut path_config = std::env::current_exe().unwrap_or_default();
+        path_config.pop();
+        path_config.push("config.toml"); 
+
         Self {
             data_sel: Local::now().date_naive(),
             stato: StatoApp::Normale,
-            tema: TemaApp::carica("config.toml"),
+            tema: TemaApp::carica(path_config.to_str().unwrap_or("config.toml")),
             focus_index: 0,
             indice_modifica: None,
             b_nome: String::new(),

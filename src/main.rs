@@ -29,13 +29,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let eventi_shared = Arc::new(Mutex::new(eventi_caricati));
 
+    let mut app = App::new();
+
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let _ = disable_raw_mode();
+        let _ = execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture);
+        original_hook(panic_info);
+    }));
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App::new();
     let res = run_app(&mut terminal, &mut app, &eventi_shared, &path_json);
 
     disable_raw_mode()?;
@@ -127,7 +135,12 @@ where
                         }
                     }
                     KeyCode::F(5) => {
-                        app.tema = revents::config::TemaApp::carica("config.toml");
+                        let mut path_config = std::env::current_exe().unwrap_or_default();
+                        path_config.pop();
+                        path_config.push("config.toml");
+                        app.tema = revents::config::TemaApp::carica(
+                            path_config.to_str().unwrap_or("config.toml"),
+                        );
                     }
 
                     _ => {}

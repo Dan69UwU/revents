@@ -14,6 +14,8 @@ percorso_audio = "sound.wav"
 # Colore per i messaggi di errore e i campi obbligatori vuoti
 errore = "Red"
 
+evidenziato = "Yellow" 
+
 # Colore dei bordi quando il riquadro non è attivo
 bordo_normale = "Darkgray"
 
@@ -22,3 +24,5 @@ bordo_attivo = "Yellow"
   
 #Colore del testo 
 testo="White"
+
+

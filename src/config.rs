@@ -3,18 +3,19 @@ use serde::Deserialize;
 use std::fs;
 use std::str::FromStr;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct ConfigToml {
+    #[serde(default)]
     tema: TemaToml,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct TemaToml {
-    errore: String,
-    evidenziato: String,
-    bordo_normale: String,
-    bordo_attivo: String,
-    testo: String,
+    errore: Option<String>,
+    evidenziato: Option<String>,
+    bordo_normale: Option<String>,
+    bordo_attivo: Option<String>,
+    testo: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -36,23 +37,28 @@ impl TemaApp {
             testo: Color::White,
         };
 
-        let Ok(contenuto) = fs::read_to_string(percorso) else {
-            return default;
+        let contenuto = match fs::read_to_string(percorso) {
+            Ok(c) => c,
+            Err(_) => return default,
         };
 
-        let Ok(config_toml) = toml::from_str::<ConfigToml>(&contenuto) else {
-            return default;
+        let config_toml = match toml::from_str::<ConfigToml>(&contenuto) {
+            Ok(c) => c,
+            Err(_) => return default,
+        };
+
+        let estrai_colore = |campo: Option<String>, fallback: Color| -> Color {
+            campo
+                .and_then(|s| Color::from_str(&s).ok())
+                .unwrap_or(fallback)
         };
 
         TemaApp {
-            errore: Color::from_str(&config_toml.tema.errore).unwrap_or(default.errore),
-            evidenziato: Color::from_str(&config_toml.tema.evidenziato)
-                .unwrap_or(default.evidenziato),
-            bordo_normale: Color::from_str(&config_toml.tema.bordo_normale)
-                .unwrap_or(default.bordo_normale),
-            bordo_attivo: Color::from_str(&config_toml.tema.bordo_attivo)
-                .unwrap_or(default.bordo_attivo),
-            testo: Color::from_str(&config_toml.tema.testo).unwrap_or(default.testo),
+            errore: estrai_colore(config_toml.tema.errore, default.errore),
+            evidenziato: estrai_colore(config_toml.tema.evidenziato, default.evidenziato),
+            bordo_normale: estrai_colore(config_toml.tema.bordo_normale, default.bordo_normale),
+            bordo_attivo: estrai_colore(config_toml.tema.bordo_attivo, default.bordo_attivo),
+            testo: estrai_colore(config_toml.tema.testo, default.testo),
         }
     }
 }

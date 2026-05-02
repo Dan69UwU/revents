@@ -1,4 +1,5 @@
 use crate::config::TemaApp;
+use crate::file_picker::FilePicker;
 use crate::model::{AnticipoNotifica, Frequenza};
 use chrono::{Local, NaiveDate};
 
@@ -9,6 +10,7 @@ pub enum StatoApp {
     Dettaglio,
     Modifica,
     Conferma,
+    Selezione,
 }
 
 pub struct App {
@@ -24,13 +26,15 @@ pub struct App {
     pub b_freq: Frequenza,
     pub b_notifica: AnticipoNotifica,
     pub b_suono: bool,
+    pub file_picker: FilePicker,
+    pub popup_msg: Option<String>,
 }
 
 impl App {
     pub fn new() -> Self {
         let mut path_config = std::env::current_exe().unwrap_or_default();
         path_config.pop();
-        path_config.push("config.toml"); 
+        path_config.push("config.toml");
 
         Self {
             data_sel: Local::now().date_naive(),
@@ -38,12 +42,16 @@ impl App {
             tema: TemaApp::carica(path_config.to_str().unwrap_or("config.toml")),
             focus_index: 0,
             indice_modifica: None,
+
             b_nome: String::new(),
             b_desc: String::new(),
             b_ora: String::from("12:00"),
             b_freq: Frequenza::Mai,
             b_notifica: AnticipoNotifica::Nessuna,
             b_suono: false,
+
+            file_picker: FilePicker::new(),
+            popup_msg: None,
         }
     }
 

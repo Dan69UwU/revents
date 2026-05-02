@@ -1,5 +1,9 @@
-use chrono::{Datelike, NaiveDate, NaiveTime};
+use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime};
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::BufReader;
+use std::io::Write;
+use std::path::Path;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum Frequenza {
@@ -94,4 +98,150 @@ impl Evento {
             }
         }
     }
+}
+pub fn importa_ics(path: &Path) -> Result<Vec<Evento>, Box<dyn std::error::Error>> {
+    let buf = BufReader::new(File::open(path)?);
+    let reader = ical::IcalParser::new(buf);
+
+    let mut nuovi_eventi = Vec::new();
+
+    for calendar in reader {
+        let cal = calendar.map_err(|_| "Errore nel parsing del calendario")?;
+
+        for event in cal.events {
+            let mut nome = String::from("Nuovo Evento");
+            let mut descrizione = None;
+            let mut data_inizio = chrono::Local::now().date_naive();
+            let mut ora_inizio = NaiveTime::from_hms_opt(12, 0, 0).unwrap();
+
+            let mut ricorrenza = Frequenza::Mai;
+            let notifica_anticipo = AnticipoNotifica::Nessuna;
+
+            for prop in event.properties {
+                match prop.name.as_str() {
+                    "SUMMARY" => {
+                        if let Some(val) = prop.value {
+                            nome = val;
+                        }
+                    }
+                    "DESCRIPTION" => {
+                        descrizione = prop.value;
+                    }
+                    "DTSTART" => {
+                        if let Some(val) = prop.value {
+                            let val_clean = val.replace("Z", "");
+                            if val_clean.contains('T') {
+                                if let Ok(dt) =
+                                    NaiveDateTime::parse_from_str(&val_clean, "%Y%m%dT%H%M%S")
+                                {
+                                    data_inizio = dt.date();
+                                    ora_inizio = dt.time();
+                                }
+                            } else {
+                                if let Ok(d) = NaiveDate::parse_from_str(&val_clean, "%Y%m%d") {
+                                    data_inizio = d;
+                                    ora_inizio = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+                                }
+                            }
+                        }
+                    }
+                    "RRULE" => {
+                        if let Some(val) = prop.value {
+                            let rule = val.to_uppercase();
+                            ricorrenza = if rule.contains("FREQ=DAILY") {
+                                Frequenza::Giornaliera
+                            } else if rule.contains("FREQ=WEEKLY") {
+                                Frequenza::Settimanale
+                            } else if rule.contains("FREQ=MONTHLY") {
+                                Frequenza::Mensile
+                            } else if rule.contains("FREQ=YEARLY") {
+                                Frequenza::Annuale
+                            } else {
+                                Frequenza::Mai
+                            };
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            nuovi_eventi.push(Evento {
+                nome,
+                descrizione,
+                data_inizio,
+                ora_inizio,
+                ricorrenza,
+                notifica_anticipo,
+                riproduci_suono: false,
+            });
+        }
+    }
+
+    Ok(nuovi_eventi)
+}
+pub fn esporta_ics(eventi: &[Evento], path: &Path) -> std::io::Result<()> {
+    let mut file = File::create(path)?;
+
+    write!(file, "BEGIN:VCALENDAR\r\n")?;
+    write!(file, "VERSION:2.0\r\n")?;
+    write!(file, "PRODID:-//Revents App//IT\r\n")?;
+
+    let now = chrono::Local::now().format("%Y%m%dT%H%M%SZ");
+
+    for ev in eventi {
+        write!(file, "BEGIN:VEVENT\r\n")?;
+
+        write!(file, "DTSTAMP:{}\r\n", now)?;
+        let uid = format!(
+            "{}-{}@revents",
+            ev.data_inizio.format("%Y%m%d"),
+            ev.nome.replace(' ', "")
+        );
+        write!(file, "UID:{}\r\n", uid)?;
+
+        write!(file, "SUMMARY:{}\r\n", ev.nome)?;
+
+        if let Some(desc) = &ev.descrizione {
+            let desc_escaped = desc.replace('\n', "\\n");
+            write!(file, "DESCRIPTION:{}\r\n", desc_escaped)?;
+        }
+
+        let dtstart = format!(
+            "{}T{}",
+            ev.data_inizio.format("%Y%m%d"),
+            ev.ora_inizio.format("%H%M%S")
+        );
+        write!(file, "DTSTART:{}\r\n", dtstart)?;
+
+        match ev.ricorrenza {
+            Frequenza::Giornaliera => write!(file, "RRULE:FREQ=DAILY\r\n")?,
+            Frequenza::Settimanale => write!(file, "RRULE:FREQ=WEEKLY\r\n")?,
+            Frequenza::Mensile => write!(file, "RRULE:FREQ=MONTHLY\r\n")?,
+            Frequenza::Annuale => write!(file, "RRULE:FREQ=YEARLY\r\n")?,
+            Frequenza::Mai => {}
+        }
+
+        if ev.notifica_anticipo != AnticipoNotifica::Nessuna {
+            write!(file, "BEGIN:VALARM\r\n")?;
+            write!(file, "ACTION:DISPLAY\r\n")?;
+            write!(file, "DESCRIPTION:Promemoria: {}\r\n", ev.nome)?;
+
+            let min = match ev.notifica_anticipo {
+                AnticipoNotifica::CinqueMinuti => "-PT5M",
+                AnticipoNotifica::QuindiciMinuti => "-PT15M",
+                AnticipoNotifica::TrentaMinuti => "-PT30M",
+                AnticipoNotifica::UnOra => "-PT1H",
+                AnticipoNotifica::UnGiorno => "-P1D",
+                _ => "-PT0M",
+            };
+            write!(file, "TRIGGER:{}\r\n", min)?;
+            write!(file, "END:VALARM\r\n")?;
+        }
+
+        write!(file, "END:VEVENT\r\n")?;
+    }
+
+    write!(file, "END:VCALENDAR\r\n")?;
+
+    Ok(())
 }

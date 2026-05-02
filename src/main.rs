@@ -96,6 +96,10 @@ where
 
             let mut lista = eventi_shared.lock().unwrap();
             let mut dati_modificati = false;
+            if app.popup_msg.is_some() {
+                app.popup_msg = None;
+                continue;
+            }
 
             match app.stato {
                 StatoApp::Normale => match key.code {
@@ -103,6 +107,10 @@ where
                     KeyCode::Char('n') => {
                         app.reset_buffer();
                         app.stato = StatoApp::Creazione;
+                    }
+                    KeyCode::Char('i') => {
+                        app.stato = StatoApp::Selezione;
+                        app.file_picker.carica_cartella();
                     }
                     KeyCode::Right => {
                         app.data_sel += Duration::days(1);
@@ -280,6 +288,25 @@ where
                             app.stato = StatoApp::Modifica;
                         }
                     }
+                    KeyCode::Char('e') => {
+                        if let Some(idx) = trova_indice_reale(&lista, app.data_sel, app.focus_index)
+                        {
+                            let evento = &lista[idx];
+                            let nome_file = format!("{}.ics", evento.nome.replace(' ', "_"));
+                            let path_export = std::env::var("HOME")
+                                .map(std::path::PathBuf::from)
+                                .unwrap_or_else(|_| std::path::PathBuf::from("/"))
+                                .join(nome_file);
+
+                            if revents::model::esporta_ics(&lista[idx..=idx], &path_export).is_ok()
+                            {
+                                app.popup_msg = Some(format!(
+                                    "\nEsportato con successo!\n\nSalvato in:\n{}",
+                                    path_export.display()
+                                ));
+                            }
+                        }
+                    }
                     KeyCode::Down => {
                         let eventi_giorno = lista
                             .iter()
@@ -316,6 +343,37 @@ where
                     }
                     KeyCode::Char('n') | KeyCode::Esc => {
                         app.stato = StatoApp::Dettaglio;
+                    }
+                    _ => {}
+                },
+                StatoApp::Selezione => match key.code {
+                    KeyCode::Esc => app.stato = StatoApp::Normale,
+                    KeyCode::Down => app.file_picker.prossimo_elemento(),
+                    KeyCode::Up => app.file_picker.elemento_precedente(),
+                    KeyCode::Enter => {
+                        if let Some(i) = app.file_picker.list_state.selected() {
+                            let path = app.file_picker.dir_items[i].clone();
+
+                            if path.is_dir() {
+                                app.file_picker.current_dir =
+                                    std::fs::canonicalize(&path).unwrap_or(path);
+                                app.file_picker.carica_cartella();
+                            } else {
+                                app.file_picker.selected_file = Some(path.clone());
+                                app.stato = StatoApp::Normale;
+
+                                if let Ok(mut eventi_importati) = revents::model::importa_ics(&path)
+                                {
+                                    lista.append(&mut eventi_importati);
+
+                                    dati_modificati = true;
+
+                                    if let Some(primo) = lista.last() {
+                                        app.data_sel = primo.data_inizio;
+                                    }
+                                }
+                            }
+                        }
                     }
                     _ => {}
                 },

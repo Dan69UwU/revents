@@ -6,10 +6,9 @@ use ratatui::text::{Line, Span};
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout},
-    style::Style,
-    widgets::{Block, Borders, Paragraph, Wrap},
+    style::{Color, Style},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph, Wrap},
 };
-
 const MESI: [&str; 12] = [
     "Gennaio",
     "Febbraio",
@@ -380,17 +379,94 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 corpo[1],
             );
         }
+        StatoApp::Selezione => {
+            let popup_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Percentage(10),
+                    Constraint::Percentage(80),
+                    Constraint::Percentage(10),
+                ])
+                .split(area);
+
+            let inner_layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([
+                    Constraint::Percentage(15),
+                    Constraint::Percentage(70),
+                    Constraint::Percentage(15),
+                ])
+                .split(popup_layout[1]);
+
+            let area_popup = inner_layout[1];
+
+            let items: Vec<ListItem> = app
+                .file_picker
+                .dir_items
+                .iter()
+                .map(|path| {
+                    let is_dir = path.is_dir();
+                    let nome_file = path.file_name().unwrap_or_default().to_string_lossy();
+
+                    let (icona, nome_display) = if nome_file == ".." {
+                        ("🔙", String::from(".. (Cartella Superiore)"))
+                    } else if is_dir {
+                        ("📁", nome_file.into_owned())
+                    } else {
+                        ("📄", nome_file.into_owned())
+                    };
+
+                    let style = if is_dir
+                        || path
+                            .extension()
+                            .map_or(false, |e| e == "ics" || e == "ical")
+                    {
+                        Style::default().fg(app.tema.testo)
+                    } else {
+                        Style::default().fg(Color::DarkGray)
+                    };
+
+                    ListItem::new(format!("{} {}", icona, nome_display)).style(style)
+                })
+                .collect();
+
+            let mut state_clone = app.file_picker.list_state.clone();
+
+            let list = List::new(items)
+                .block(
+                    Block::default()
+                        .title(format!(
+                            " Scegli un file iCal - [{}] ",
+                            app.file_picker.current_dir.display()
+                        ))
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(app.tema.bordo_attivo)),
+                )
+                .highlight_style(
+                    Style::default()
+                        .bg(app.tema.bordo_attivo)
+                        .fg(app.tema.testo)
+                        .add_modifier(ratatui::style::Modifier::BOLD),
+                )
+                .highlight_symbol(">> ");
+
+            f.render_widget(Clear, area_popup);
+            f.render_stateful_widget(list, area_popup, &mut state_clone);
+        }
     }
 
     let aiuti = match app.stato {
         StatoApp::Normale => {
-            "Q: Esci | N: Nuovo | INVIO: Dettagli | Frecce: Naviga | F5: Ricarica tema"
+            "Q: Esci | N: Nuovo | I:importa | INVIO: Dettagli | Frecce: Naviga | F5: Ricarica tema"
         }
-        StatoApp::Dettaglio => "ESC: Torna | N: Nuovo | /: Scorri | D: Elimina | M: Modifica",
+        StatoApp::Dettaglio => {
+            "ESC: Torna | N: Nuovo | E: Esporta | /: Scorri | D: Elimina | M: Modifica"
+        }
         StatoApp::Creazione | StatoApp::Modifica => {
             "TAB: Campo | SPAZIO: Cambia | INVIO: Salva | ESC: Annulla"
         }
         StatoApp::Conferma => "S/Y/INVIO: Conferma | N/ESC: Annulla",
+        StatoApp::Selezione => "INVIO: Apri Cartella/Seleziona | ESC: Annulla | /: Scorri",
     };
     f.render_widget(
         Paragraph::new(aiuti).fg(app.tema.testo).block(
@@ -401,4 +477,36 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
         ),
         main_l[1],
     );
+    if let Some(msg) = &app.popup_msg {
+        let area_popup = ratatui::layout::Layout::default()
+            .direction(ratatui::layout::Direction::Vertical)
+            .constraints([
+                ratatui::layout::Constraint::Percentage(35),
+                ratatui::layout::Constraint::Length(8),
+                ratatui::layout::Constraint::Percentage(35),
+            ])
+            .split(area)[1];
+
+        let inner_popup = ratatui::layout::Layout::default()
+            .direction(ratatui::layout::Direction::Horizontal)
+            .constraints([
+                ratatui::layout::Constraint::Percentage(20),
+                ratatui::layout::Constraint::Percentage(60),
+                ratatui::layout::Constraint::Percentage(20),
+            ])
+            .split(area_popup)[1];
+
+        let paragraph = Paragraph::new(msg.as_str())
+            .alignment(ratatui::layout::Alignment::Center)
+            .style(Style::default().fg(app.tema.testo))
+            .block(
+                Block::default()
+                    .title(" Avviso (Premi un tasto) ")
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(app.tema.bordo_attivo)),
+            );
+
+        f.render_widget(Clear, inner_popup);
+        f.render_widget(paragraph, inner_popup);
+    }
 }

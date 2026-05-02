@@ -1,3 +1,4 @@
+
 # Agenda TUI
 
 R(emember)events è un'agenda minimale da terminale scritta in Rust. Include l'interfaccia principale (`revents`) e un daemon in background (`daemon`) per le notifiche desktop. I dati vengono salvati in un file `agenda.json` locale.
@@ -66,6 +67,7 @@ Lancia l'interfaccia aprendo il terminale e digitando `~/Agenda/revents`.
 **Vista Calendario (Normale):**
 * **Frecce / Tab**: Naviga tra giorni e settimane.
 * **n**: Crea un nuovo evento nella data selezionata.
+* **i**: Importa un calendario da un file `.ics`.
 * **Invio**: Apri i dettagli degli eventi di quella giornata.
 * **F5**: Ricarica il tema dal file di configurazione.
 * **q** / **Esc**: Esci dall'applicazione.
@@ -74,16 +76,15 @@ Lancia l'interfaccia aprendo il terminale e digitando `~/Agenda/revents`.
 * **Frecce Su/Giù** / **Tab**: Spostati tra i campi (Nome, Descrizione, Ora, ecc.).
 * **Frecce Destra/Sinistra** / **Spazio**: Cambia i valori ciclici (Ricorrenza, Anticipo Notifica, Suono).
 * **Invio**: Salva l'evento.
-* **Esc**: Annulla e torna al calendario.
 
 **Pannello Dettagli Evento:**
 * **Frecce Su/Giù**: Scorri la lista degli eventi in quel giorno.
 * **n**: Crea rapidamente un nuovo evento per quel giorno.
 * **m**: Modifica l'evento selezionato.
+* **e**: Esporta l'evento selezionato in un file `.ics` (verrà salvato automaticamente nella tua cartella Home con il nome dell'evento).
 * **d**: Elimina l'evento selezionato.
-* **Esc**: Torna al calendario.
 
 ## 📝 TODO (Roadmap)
 Funzioni che verranno aggiunte in seguito:
+* [x] Supporto all'esportazione/importazione in formato iCal (`.ics`).
 * [ ] Tasti completamente configurabili dall'utente.
-* [ ] Supporto all'esportazione/importazione in formato iCal (`.ics`).

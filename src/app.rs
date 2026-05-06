@@ -23,6 +23,7 @@ pub struct App {
     pub b_nome: String,
     pub b_desc: String,
     pub b_ora: String,
+    pub b_data_fine: String,
     pub b_freq: Frequenza,
     pub b_notifica: AnticipoNotifica,
     pub b_suono: bool,
@@ -44,6 +45,7 @@ impl App {
             indice_modifica: None,
 
             b_nome: String::new(),
+            b_data_fine: String::new(),
             b_desc: String::new(),
             b_ora: String::from("12:00"),
             b_freq: Frequenza::Mai,
@@ -58,6 +60,7 @@ impl App {
     pub fn reset_buffer(&mut self) {
         self.b_nome.clear();
         self.b_desc.clear();
+        self.b_data_fine.clear();
         self.b_ora = String::from("12:00");
         self.b_freq = Frequenza::Mai;
         self.b_notifica = AnticipoNotifica::Nessuna;

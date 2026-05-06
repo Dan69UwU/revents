@@ -186,13 +186,14 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
 
             if let Some(ev) = oggi.get(app.focus_index) {
                 let det = format!(
-                    "NOME: {}\nORA: {}\nRICORRENZA: {:?}\nNOTIFICA: {}\nINIZIO: {}\n\nDESCRIZIONE:\n{}",
+                    "NOME: {}\nORA: {}\nRICORRENZA: {:?}\nNOTIFICA: {}\nINIZIO: {}\nFINE: {}\n\nDESCRIZIONE:\n{}",
                     ev.nome,
                     ev.ora_inizio.format("%H:%M"),
                     ev.ricorrenza,
                     ev.notifica_anticipo.as_str(),
                     ev.data_inizio,
-                    ev.descrizione.as_deref().unwrap_or("---")
+                    ev.data_fine,
+                    ev.descrizione.as_deref().unwrap_or("---"),
                 );
                 f.render_widget(
                     Paragraph::new(det)
@@ -213,6 +214,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             let form = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
+                    Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Length(3),
                     Constraint::Length(3),
@@ -277,15 +279,26 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 form[2],
             );
             f.render_widget(
+                Paragraph::new(app.b_data_fine.as_str())
+                    .fg(app.tema.testo)
+                    .block(
+                        Block::default()
+                            .title(" Data Fine (YYYY-MM-DD) ")
+                            .borders(Borders::ALL)
+                            .border_style(s(3)),
+                    ),
+                form[3],
+            );
+            f.render_widget(
                 Paragraph::new(format!("{:?} (SPAZIO)", app.b_freq))
                     .fg(app.tema.testo)
                     .block(
                         Block::default()
                             .title(" Ricorrenza ")
                             .borders(Borders::ALL)
-                            .border_style(s(3)),
+                            .border_style(s(4)),
                     ),
-                form[3],
+                form[4],
             );
             f.render_widget(
                 Paragraph::new(format!("{} (SPAZIO)", app.b_notifica.as_str()))
@@ -294,9 +307,9 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                         Block::default()
                             .title(" Notifica Anticipata ")
                             .borders(Borders::ALL)
-                            .border_style(s(4)),
+                            .border_style(s(5)),
                     ),
-                form[4],
+                form[5],
             );
             let testo_suono = if app.b_suono {
                 "[X] Attivo (SPAZIO)"
@@ -309,9 +322,9 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                     Block::default()
                         .title(" Suono Notifica ")
                         .borders(Borders::ALL)
-                        .border_style(s(5)), // Assegna il focus all'indice 5
+                        .border_style(s(6)),
                 ),
-                form[5],
+                form[6],
             );
             f.render_widget(
                 Paragraph::new("Stai editando un evento")
@@ -332,6 +345,10 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
                 )),
                 2 => f.set_cursor_position((
                     area_attiva.x + app.b_ora.len() as u16 + 1,
+                    area_attiva.y + 1,
+                )),
+                3 => f.set_cursor_position((
+                    area_attiva.x + app.b_data_fine.len() as u16 + 1,
                     area_attiva.y + 1,
                 )),
                 _ => {}
@@ -460,7 +477,7 @@ pub fn draw(f: &mut Frame, app: &App, eventi: &[Evento]) {
             "Q: Esci | N: Nuovo | I:importa | INVIO: Dettagli | Frecce: Naviga | F5: Ricarica tema"
         }
         StatoApp::Dettaglio => {
-            "ESC: Torna | N: Nuovo | E: Esporta | /: Scorri | D: Elimina | M: Modifica"
+            "ESC: Torna | N: Nuovo | E: Esporta | /: Scorri | D: Elimina | M/INVIO: Modifica"
         }
         StatoApp::Creazione | StatoApp::Modifica => {
             "TAB: Campo | SPAZIO: Cambia | INVIO: Salva | ESC: Annulla"

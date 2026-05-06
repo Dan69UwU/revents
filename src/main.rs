@@ -159,17 +159,17 @@ where
                         app.stato = StatoApp::Normale;
                     }
                     KeyCode::Down | KeyCode::Tab => {
-                        app.focus_index = (app.focus_index + 1) % 6;
+                        app.focus_index = (app.focus_index + 1) % 7;
                     }
                     KeyCode::Up => {
                         if app.focus_index == 0 {
-                            app.focus_index = 5;
+                            app.focus_index = 6;
                         } else {
                             app.focus_index -= 1;
                         }
                     }
                     KeyCode::Right => {
-                        if app.focus_index == 3 {
+                        if app.focus_index == 4 {
                             app.b_freq = match app.b_freq {
                                 Frequenza::Mai => Frequenza::Giornaliera,
                                 Frequenza::Giornaliera => Frequenza::Settimanale,
@@ -177,7 +177,7 @@ where
                                 Frequenza::Mensile => Frequenza::Annuale,
                                 _ => Frequenza::Mai,
                             };
-                        } else if app.focus_index == 4 {
+                        } else if app.focus_index == 5 {
                             app.b_notifica = match app.b_notifica {
                                 AnticipoNotifica::Nessuna => AnticipoNotifica::CinqueMinuti,
                                 AnticipoNotifica::CinqueMinuti => AnticipoNotifica::QuindiciMinuti,
@@ -186,7 +186,7 @@ where
                                 AnticipoNotifica::UnOra => AnticipoNotifica::UnGiorno,
                                 AnticipoNotifica::UnGiorno => AnticipoNotifica::Nessuna,
                             };
-                        } else if app.focus_index == 5 {
+                        } else if app.focus_index == 6 {
                             app.b_suono = !app.b_suono;
                         }
                     }
@@ -215,6 +215,7 @@ where
                                 0 => app.b_nome.push(c),
                                 1 => app.b_desc.push(c),
                                 2 => app.b_ora.push(c),
+                                3 => app.b_data_fine.push(c),
                                 _ => {}
                             }
                         }
@@ -229,13 +230,18 @@ where
                         2 => {
                             app.b_ora.pop();
                         }
+                        3 => {
+                            app.b_data_fine.pop();
+                        }
                         _ => {}
                     },
                     KeyCode::Enter => {
                         if !app.b_nome.is_empty() {
                             let ora_parsata = NaiveTime::parse_from_str(&app.b_ora, "%H:%M")
                                 .unwrap_or_else(|_| NaiveTime::from_hms_opt(12, 0, 0).unwrap());
-
+                            let data_fine_parsata =
+                                chrono::NaiveDate::parse_from_str(&app.b_data_fine, "%Y-%m-%d")
+                                    .unwrap_or(app.data_sel);
                             let nuovo_evento = Evento {
                                 nome: app.b_nome.clone(),
                                 descrizione: if app.b_desc.is_empty() {
@@ -245,6 +251,7 @@ where
                                 },
                                 data_inizio: app.data_sel,
                                 ora_inizio: ora_parsata,
+                                data_fine: data_fine_parsata,
                                 ricorrenza: app.b_freq.clone(),
                                 notifica_anticipo: app.b_notifica.clone(),
                                 riproduci_suono: app.b_suono,
@@ -272,13 +279,14 @@ where
                         app.reset_buffer();
                         app.stato = StatoApp::Creazione;
                     }
-                    KeyCode::Char('m') => {
+                    KeyCode::Char('m') | KeyCode::Enter => {
                         if let Some(idx) = trova_indice_reale(&lista, app.data_sel, app.focus_index)
                         {
                             let ev = &lista[idx];
                             app.b_nome = ev.nome.clone();
                             app.b_desc = ev.descrizione.clone().unwrap_or_default();
                             app.b_ora = ev.ora_inizio.format("%H:%M").to_string();
+                            app.b_data_fine = ev.data_fine.format("%Y-%m-%d").to_string();
                             app.b_freq = ev.ricorrenza.clone();
                             app.b_notifica = ev.notifica_anticipo.clone();
                             app.b_suono = ev.riproduci_suono;

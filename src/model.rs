@@ -77,6 +77,7 @@ pub struct Evento {
     pub descrizione: Option<String>,
     pub data_inizio: NaiveDate,
     pub ora_inizio: NaiveTime,
+    pub data_fine: NaiveDate,
     pub ricorrenza: Frequenza,
     pub notifica_anticipo: AnticipoNotifica,
     #[serde(default)]
@@ -88,13 +89,65 @@ impl Evento {
         if data < self.data_inizio {
             return false;
         }
+
+        let durata_giorni = (self.data_fine - self.data_inizio).num_days().max(0);
+
         match self.ricorrenza {
-            Frequenza::Mai => data == self.data_inizio,
+            Frequenza::Mai => data <= self.data_fine,
             Frequenza::Giornaliera => true,
-            Frequenza::Settimanale => (data - self.data_inizio).num_days() % 7 == 0,
-            Frequenza::Mensile => data.day() == self.data_inizio.day(),
+            Frequenza::Settimanale => {
+                let giorni_trascorsi = (data - self.data_inizio).num_days();
+                giorni_trascorsi % 7 <= durata_giorni
+            }
+            Frequenza::Mensile => {
+                let mut mese_inizio = chrono::NaiveDate::from_ymd_opt(
+                    data.year(),
+                    data.month(),
+                    self.data_inizio.day(),
+                )
+                .unwrap_or(self.data_inizio);
+
+                if mese_inizio > data {
+                    let prev_month = if data.month() == 1 {
+                        12
+                    } else {
+                        data.month() - 1
+                    };
+                    let prev_year = if data.month() == 1 {
+                        data.year() - 1
+                    } else {
+                        data.year()
+                    };
+                    mese_inizio = chrono::NaiveDate::from_ymd_opt(
+                        prev_year,
+                        prev_month,
+                        self.data_inizio.day(),
+                    )
+                    .unwrap_or(self.data_inizio);
+                }
+
+                let giorni_trascorsi = (data - mese_inizio).num_days();
+                giorni_trascorsi >= 0 && giorni_trascorsi <= durata_giorni
+            }
             Frequenza::Annuale => {
-                data.day() == self.data_inizio.day() && data.month() == self.data_inizio.month()
+                let mut anno_inizio = chrono::NaiveDate::from_ymd_opt(
+                    data.year(),
+                    self.data_inizio.month(),
+                    self.data_inizio.day(),
+                )
+                .unwrap_or(self.data_inizio);
+
+                if anno_inizio > data {
+                    anno_inizio = chrono::NaiveDate::from_ymd_opt(
+                        data.year() - 1,
+                        self.data_inizio.month(),
+                        self.data_inizio.day(),
+                    )
+                    .unwrap_or(self.data_inizio);
+                }
+
+                let giorni_trascorsi = (data - anno_inizio).num_days();
+                giorni_trascorsi >= 0 && giorni_trascorsi <= durata_giorni
             }
         }
     }
@@ -113,7 +166,7 @@ pub fn importa_ics(path: &Path) -> Result<Vec<Evento>, Box<dyn std::error::Error
             let mut descrizione = None;
             let mut data_inizio = chrono::Local::now().date_naive();
             let mut ora_inizio = NaiveTime::from_hms_opt(12, 0, 0).unwrap();
-
+            let mut data_fine = chrono::Local::now().date_naive();
             let mut ricorrenza = Frequenza::Mai;
             let notifica_anticipo = AnticipoNotifica::Nessuna;
 
@@ -136,11 +189,29 @@ pub fn importa_ics(path: &Path) -> Result<Vec<Evento>, Box<dyn std::error::Error
                                 {
                                     data_inizio = dt.date();
                                     ora_inizio = dt.time();
+                                    data_fine = dt.date();
                                 }
                             } else {
                                 if let Ok(d) = NaiveDate::parse_from_str(&val_clean, "%Y%m%d") {
                                     data_inizio = d;
                                     ora_inizio = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+                                    data_fine = d;
+                                }
+                            }
+                        }
+                    }
+                    "DTEND" => {
+                        if let Some(val) = prop.value {
+                            let val_clean = val.replace("Z", "");
+                            if val_clean.contains('T') {
+                                if let Ok(dt) =
+                                    NaiveDateTime::parse_from_str(&val_clean, "%Y%m%dT%H%M%S")
+                                {
+                                    data_fine = dt.date();
+                                }
+                            } else {
+                                if let Ok(d) = NaiveDate::parse_from_str(&val_clean, "%Y%m%d") {
+                                    data_fine = d;
                                 }
                             }
                         }
@@ -170,6 +241,7 @@ pub fn importa_ics(path: &Path) -> Result<Vec<Evento>, Box<dyn std::error::Error
                 descrizione,
                 data_inizio,
                 ora_inizio,
+                data_fine,
                 ricorrenza,
                 notifica_anticipo,
                 riproduci_suono: false,

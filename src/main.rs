@@ -191,7 +191,7 @@ where
                         }
                     }
                     KeyCode::Char(c) => {
-                        if c == ' ' && app.focus_index == 3 {
+                        if c == ' ' && app.focus_index == 4 {
                             app.b_freq = match app.b_freq {
                                 Frequenza::Mai => Frequenza::Giornaliera,
                                 Frequenza::Giornaliera => Frequenza::Settimanale,
@@ -199,7 +199,7 @@ where
                                 Frequenza::Mensile => Frequenza::Annuale,
                                 _ => Frequenza::Mai,
                             };
-                        } else if c == ' ' && app.focus_index == 4 {
+                        } else if c == ' ' && app.focus_index == 5 {
                             app.b_notifica = match app.b_notifica {
                                 AnticipoNotifica::Nessuna => AnticipoNotifica::CinqueMinuti,
                                 AnticipoNotifica::CinqueMinuti => AnticipoNotifica::QuindiciMinuti,
@@ -208,7 +208,7 @@ where
                                 AnticipoNotifica::UnOra => AnticipoNotifica::UnGiorno,
                                 AnticipoNotifica::UnGiorno => AnticipoNotifica::Nessuna,
                             };
-                        } else if c == ' ' && app.focus_index == 5 {
+                        } else if c == ' ' && app.focus_index == 6 {
                             app.b_suono = !app.b_suono;
                         } else {
                             match app.focus_index {

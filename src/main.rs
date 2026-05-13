@@ -69,7 +69,7 @@ fn trova_indice_reale(
     lista
         .iter()
         .enumerate()
-        .filter(|(_, e)| e.data_inizio == data)
+        .filter(|(_, e)| e.appare_il(data))
         .nth(focus_index)
         .map(|(i, _)| i)
 }
@@ -129,10 +129,8 @@ where
                         app.focus_index = 0;
                     }
                     KeyCode::Tab => {
-                        let eventi_giorno = lista
-                            .iter()
-                            .filter(|e| e.data_inizio == app.data_sel)
-                            .count();
+                        let eventi_giorno =
+                            lista.iter().filter(|e| e.appare_il(app.data_sel)).count();
                         if eventi_giorno > 0 {
                             app.focus_index = (app.focus_index + 1) % eventi_giorno;
                         }
